@@ -8,7 +8,9 @@ Extending the adopted spec, each change should have a link to its corresponding 
 
 ## [Unreleased]
 
-### Added
+## [2.0.0] 2019-06-ZZ
+
+### Changed
 
 * Support for Shielded Nodes beta feature via `enabled_shielded_nodes` variable. [#300]
 * Support for setting node_locations on node pools. [#303]
