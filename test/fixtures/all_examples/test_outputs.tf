@@ -61,3 +61,4 @@ output "master_kubernetes_version" {
   description = "The master Kubernetes version"
   value       = module.gke.master_version
 }
+

@@ -89,3 +89,4 @@ resource "kubernetes_service" "nginx-example" {
 
   depends_on = [module.gke]
 }
+

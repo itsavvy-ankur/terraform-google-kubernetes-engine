@@ -82,3 +82,4 @@ output "service_account" {
 output "registry_project_id" {
   value = var.registry_project_id
 }
+
