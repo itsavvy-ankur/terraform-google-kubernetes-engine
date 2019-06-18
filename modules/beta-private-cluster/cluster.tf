@@ -206,6 +206,7 @@ resource "google_container_cluster" "primary" {
     }
   }
 
+{% endif %}
   remove_default_node_pool = var.remove_default_node_pool
 
   dynamic "database_encryption" {
