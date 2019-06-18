@@ -176,6 +176,7 @@ resource "google_container_cluster" "primary" {
     master_ipv4_cidr_block  = var.master_ipv4_cidr_block
   }
 
+{% endif %}
   remove_default_node_pool = var.remove_default_node_pool
 
   dynamic "database_encryption" {
