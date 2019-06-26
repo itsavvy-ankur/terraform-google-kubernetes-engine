@@ -87,37 +87,37 @@ variable "master_authorized_networks_config" {
 variable "horizontal_pod_autoscaling" {
   type        = bool
   description = "Enable horizontal pod autoscaling addon"
-  default = true
+  default     = true
 }
 
 variable "http_load_balancing" {
   type        = bool
   description = "Enable httpload balancer addon"
-  default = true
+  default     = true
 }
 
 variable "kubernetes_dashboard" {
   type        = bool
   description = "Enable kubernetes dashboard addon"
-  default = false
+  default     = false
 }
 
 variable "network_policy" {
   type        = bool
   description = "Enable network policy addon"
-  default = false
+  default     = false
 }
 
 variable "network_policy_provider" {
   type        = string
   description = "The network policy provider."
-  default = "CALICO"
+  default     = "CALICO"
 }
 
 variable "maintenance_start_time" {
   type        = string
   description = "Time window specified for daily maintenance operations in RFC3339 format"
-  default = "05:00"
+  default     = "05:00"
 }
 
 variable "ip_range_pods" {
@@ -133,13 +133,13 @@ variable "ip_range_services" {
 variable "initial_node_count" {
   type        = number
   description = "The number of nodes to create in this cluster's default node pool."
-  default = 0
+  default     = 0
 }
 
 variable "remove_default_node_pool" {
   type        = bool
   description = "Remove default node pool while setting up the cluster"
-  default = false
+  default     = false
 }
 
 variable "disable_legacy_metadata_endpoints" {
@@ -164,7 +164,7 @@ variable "node_pools_labels" {
   description = "Map of maps containing node labels by node-pool name"
 
   default = {
-    all = {}
+    all               = {}
     default-node-pool = {}
   }
 }
@@ -174,7 +174,7 @@ variable "node_pools_metadata" {
   description = "Map of maps containing node metadata by node-pool name"
 
   default = {
-    all = {}
+    all               = {}
     default-node-pool = {}
   }
 }
@@ -184,7 +184,7 @@ variable "node_pools_tags" {
   description = "Map of lists containing node network tags by node-pool name"
 
   default = {
-    all = []
+    all               = []
     default-node-pool = []
   }
 }
@@ -194,7 +194,7 @@ variable "node_pools_oauth_scopes" {
   description = "Map of lists containing node oauth scopes by node-pool name"
 
   default = {
-    all = ["https://www.googleapis.com/auth/cloud-platform"]
+    all               = ["https://www.googleapis.com/auth/cloud-platform"]
     default-node-pool = []
   }
 }
@@ -202,7 +202,7 @@ variable "node_pools_oauth_scopes" {
 variable "stub_domains" {
   type        = map(list(string))
   description = "Map of stub domains and their resolvers to forward DNS queries for a certain domain to an external DNS server"
-  default = {}
+  default     = {}
 }
 
 variable "upstream_nameservers" {
@@ -214,13 +214,13 @@ variable "upstream_nameservers" {
 variable "non_masquerade_cidrs" {
   type        = list(string)
   description = "List of strings in CIDR notation that specify the IP address ranges that do not use IP masquerading."
-  default = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+  default     = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
 }
 
 variable "ip_masq_resync_interval" {
   type        = string
   description = "The interval at which the agent attempts to sync its ConfigMap file from the disk."
-  default = "60s"
+  default     = "60s"
 }
 
 variable "ip_masq_link_local" {
@@ -237,13 +237,13 @@ variable "configure_ip_masq" {
 variable "logging_service" {
   type        = string
   description = "The logging service that the cluster should write logs to. Available options include logging.googleapis.com, logging.googleapis.com/kubernetes (beta), and none"
-  default = "logging.googleapis.com"
+  default     = "logging.googleapis.com"
 }
 
 variable "monitoring_service" {
   type        = string
   description = "The monitoring service that the cluster should write metrics to. Automatically send metrics from pods in the cluster to the Google Cloud Monitoring API. VM metrics will be collected by Google Compute Engine regardless of this setting Available options include monitoring.googleapis.com, monitoring.googleapis.com/kubernetes (beta) and none"
-  default = "monitoring.googleapis.com"
+  default     = "monitoring.googleapis.com"
 }
 
 variable "create_service_account" {
@@ -273,13 +273,13 @@ variable "service_account" {
 variable "basic_auth_username" {
   type        = string
   description = "The username to be used with Basic Authentication. An empty value will disable Basic Authentication, which is the recommended configuration."
-  default = ""
+  default     = ""
 }
 
 variable "basic_auth_password" {
   type        = string
   description = "The password to be used with Basic Authentication."
-  default = ""
+  default     = ""
 }
 
 variable "issue_client_certificate" {
