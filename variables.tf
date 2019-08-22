@@ -79,7 +79,7 @@ variable "node_version" {
 
 variable "master_authorized_networks_config" {
   type        = list(object({ cidr_blocks = list(object({ cidr_block = string, display_name = string })) }))
-  description = "The desired configuration options for master authorized networks. Omit the nested cidr_blocks attribute to disallow external access (except the cluster node IPs, which GKE automatically whitelists)"
+  description = "The desired configuration options for master authorized networks. The object format is {cidr_blocks = list(object({cidr_block = string, display_name = string}))}. Omit the nested cidr_blocks attribute to disallow external access (except the cluster node IPs, which GKE automatically whitelists)."
   default     = []
 }
 
@@ -214,6 +214,12 @@ variable "stub_domains" {
   default     = {}
 }
 
+variable "upstream_nameservers" {
+  type        = "list"
+  description = "If specified, the values replace the nameservers taken by default from the node’s /etc/resolv.conf"
+  default     = []
+}
+
 variable "non_masquerade_cidrs" {
   type        = list(string)
   description = "List of strings in CIDR notation that specify the IP address ranges that do not use IP masquerading."
@@ -232,6 +238,11 @@ variable "ip_masq_link_local" {
   default     = false
 }
 
+variable "configure_ip_masq" {
+  description = "Enables the installation of ip masquerading, which is usually no longer required when using aliasied IP addresses. IP masquerading uses a kubectl call, so when you have a private cluster, you will need access to the API server."
+  default     = false
+}
+
 variable "logging_service" {
   type        = string
   description = "The logging service that the cluster should write logs to. Available options include logging.googleapis.com, logging.googleapis.com/kubernetes (beta), and none"
@@ -244,10 +255,22 @@ variable "monitoring_service" {
   default     = "monitoring.googleapis.com"
 }
 
+variable "create_service_account" {
+  type        = bool
+  description = "Defines if service account specified to run nodes should be created."
+  default     = true
+}
+
+variable "grant_registry_access" {
+  type        = bool
+  description = "Grants created cluster-specific service account storage.objectViewer role."
+  default     = false
+}
+
 variable "service_account" {
   type        = string
-  description = "The service account to run nodes as if not overridden in `node_pools`. The default value will cause a cluster-specific service account to be created."
-  default     = "create"
+  description = "The service account to run nodes as if not overridden in `node_pools`. The create_service_account variable default value (true) will cause a cluster-specific service account to be created."
+  default     = ""
 }
 
 variable "basic_auth_username" {
@@ -267,3 +290,15 @@ variable "issue_client_certificate" {
   description = "Issues a client certificate to authenticate to the cluster endpoint. To maximize the security of your cluster, leave this option disabled. Client certificates don't automatically rotate and aren't easily revocable. WARNING: changing this after cluster creation is destructive!"
   default     = false
 }
+
+variable "cluster_ipv4_cidr" {
+  default     = ""
+  description = "The IP address range of the kubernetes pods in this cluster. Default is an automatically assigned CIDR."
+}
+
+variable "cluster_resource_labels" {
+  type        = map(string)
+  description = "The GCE resource labels (a map of key/value pairs) to be applied to the cluster"
+  default     = {}
+}
+

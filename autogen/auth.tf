@@ -20,8 +20,11 @@
   Retrieve authentication token
  *****************************************/
 data "google_client_config" "default" {
-  provider = {% if private_cluster %}google-beta{%else %}google{% endif %}
-
+  {% if private_cluster or beta_cluster %}
+  provider = google-beta
+  {% else %}
+  provider = google
+  {% endif %}
 }
 
 /******************************************

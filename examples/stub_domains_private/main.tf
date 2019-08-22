@@ -15,7 +15,7 @@
  */
 
 provider "google-beta" {
-  version = "~> 2.8.0"
+  version = "~> 2.12.0"
   region  = var.region
 }
 
@@ -57,8 +57,9 @@ module "gke" {
 
   master_ipv4_cidr_block = "172.16.0.0/28"
 
-  network_policy  = true
-  service_account = var.compute_engine_service_account
+  network_policy         = true
+  create_service_account = false
+  service_account        = var.compute_engine_service_account
 
   stub_domains = {
     "example.com" = [
@@ -74,4 +75,3 @@ module "gke" {
 
 data "google_client_config" "default" {
 }
-

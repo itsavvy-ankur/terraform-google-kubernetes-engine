@@ -1,18 +1,28 @@
 # Terraform Kubernetes Engine Module
 
-This module handles opinionated Google Cloud Platform Kubernetes Engine cluster creation and configuration with Node Pools, IP MASQ, Network Policy, etc.{% if private_cluster %} This particular submodule creates a [private cluster](https://cloud.google.com/kubernetes-engine/docs/how-to/private-clusters){% endif %}
+This module handles opinionated Google Cloud Platform Kubernetes Engine cluster creation and configuration with Node Pools, IP MASQ, Network Policy, etc.{% if private_cluster %} This particular submodule creates a [private cluster](https://cloud.google.com/kubernetes-engine/docs/how-to/private-clusters){% endif %}{% if beta_cluster %}Beta features are enabled in this submodule.{% endif %}
 
 The resources/services/activations/deletions that this module will create/trigger are:
 - Create a GKE cluster with the provided addons
 - Create GKE Node Pool(s) with provided configuration and attach to cluster
 - Replace the default kube-dns configmap if `stub_domains` are provided
 - Activate network policy if `network_policy` is true
-- Add `ip-masq-agent` configmap with provided `non_masquerade_cidrs` if `network_policy` is true
+- Add `ip-masq-agent` configmap with provided `non_masquerade_cidrs` if `configure_ip_masq` is true
+
+Sub modules are provided from creating private clusters, beta private clusters, and beta public clusters as well.  Beta sub modules allow for the use of various GKE beta features. See the modules directory for the various sub modules.
 
 {% if private_cluster %}
 **Note**: You must run Terraform from a VM on the same VPC as your cluster, otherwise there will be issues connecting to the GKE master.
 
   {% endif %}
+
+## Compatibility
+
+This module is meant for use with Terraform 0.12. If you haven't
+[upgraded][terraform-0.12-upgrade] and need a Terraform
+0.11.x-compatible version of this module, the last released version
+intended for Terraform 0.11.x is [3.0.0].
+
 ## Usage
 There are multiple examples included in the [examples](./examples/) folder but simple usage is as follows:
 
@@ -35,6 +45,10 @@ module "gke" {
   enable_private_endpoint    = true
   enable_private_nodes       = true
   master_ipv4_cidr_block     = "10.0.0.0/28"
+  {% endif %}
+  {% if beta_cluster %}
+  istio = true
+  cloudrun = true
   {% endif %}
 
   node_pools = [
@@ -100,12 +114,18 @@ module "gke" {
 }
 ```
 
+<!-- do not understand what this is about -->
 Then perform the following commands on the root folder:
 
 - `terraform init` to get the plugins
 - `terraform plan` to see the infrastructure plan
 - `terraform apply` to apply the infrastructure build
 - `terraform destroy` to destroy the built infrastructure
+
+## Upgrade to v3.0.0
+
+v3.0.0 is a breaking release. Refer to the
+[Upgrading to v3.0 guide][upgrading-to-v3.0] for details.
 
 ## Upgrade to v2.0.0
 
@@ -136,11 +156,11 @@ The [project factory](https://github.com/terraform-google-modules/terraform-goog
 #### Kubectl
 - [kubectl](https://github.com/kubernetes/kubernetes/releases) 1.9.x
 #### Terraform and Plugins
-- [Terraform](https://www.terraform.io/downloads.html) 0.12.x
-{% if private_cluster %}
-- [terraform-provider-google-beta](https://github.com/terraform-providers/terraform-provider-google-beta) v2.8
+- [Terraform](https://www.terraform.io/downloads.html) 0.12
+{% if private_cluster or beta_cluster %}
+- [Terraform Provider for GCP Beta][terraform-provider-google-beta] v2.9
 {% else %}
-- [terraform-provider-google](https://github.com/terraform-providers/terraform-provider-google) v2.8
+- [Terraform Provider for GCP][terraform-provider-google] v2.9
 {% endif %}
 
 ### Configure a Service Account
@@ -163,20 +183,25 @@ In order to operate with the Service Account you must activate the following API
 The project has the following folders and files:
 
 - /: root folder
-- /examples: examples for using this module
-- /helpers: Helper scripts
-- /scripts: Scripts for specific tasks on module (see Infrastructure section on this file)
-- /test: Folders with files for testing the module (see Testing section on this file)
-- /main.tf: main file for this module, contains all the resources to create
-- /variables.tf: all the variables for the module
-- /output.tf: the outputs of the module
-- /readme.MD: this file
+- /examples: Examples for using this module and sub module.
+- /helpers: Helper scripts.
+- /scripts: Scripts for specific tasks on module (see Infrastructure section on this file).
+- /test: Folders with files for testing the module (see Testing section on this file).
+- /main.tf: `main` file for the public module, contains all the resources to create.
+- /variables.tf: Variables for the public cluster module.
+- /output.tf: The outputs for the public cluster module.
+- /README.MD: This file.
+- /modules: Private and beta sub modules.
 
 ## Templating
 
 To more cleanly handle cases where desired functionality would require complex duplication of Terraform resources (i.e. [PR 51](https://github.com/terraform-google-modules/terraform-google-kubernetes-engine/pull/51)), this repository is largely generated from the [`autogen`](/autogen) directory.
 
 The root module is generated by running `make generate`. Changes to this repository should be made in the [`autogen`](/autogen) directory where appropriate.
+
+Note: The correct sequence to update the repo using autogen functionality is to run
+`make generate && make generate_docs`.  This will create the various Terraform files, and then
+generate the Terraform documentation using `terraform-docs`.
 
 ## Testing
 
@@ -309,3 +334,15 @@ command.
 {% else %}
 [upgrading-to-v2.0]: docs/upgrading_to_v2.0.md
 {% endif %}
+{% if private_cluster or beta_cluster %}
+[upgrading-to-v3.0]: ../../docs/upgrading_to_v3.0.md
+{% else %}
+[upgrading-to-v3.0]: docs/upgrading_to_v3.0.md
+{% endif %}
+{% if private_cluster or beta_cluster %}
+[terraform-provider-google-beta]: https://github.com/terraform-providers/terraform-provider-google-beta
+{% else %}
+[terraform-provider-google]: https://github.com/terraform-providers/terraform-provider-google
+{% endif %}
+[3.0.0]: https://registry.terraform.io/modules/terraform-google-modules/kubernetes-engine/google/3.0.0
+[terraform-0.12-upgrade]: https://www.terraform.io/upgrade-guides/0-12.html

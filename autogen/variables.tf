@@ -78,40 +78,11 @@ variable "node_version" {
 }
 
 variable "master_authorized_networks_config" {
-  type = list(object({cidr_blocks=list(object({cidr_block=string,display_name=string}))}))
-
-  description = <<EOF
-  The desired configuration options for master authorized networks. Omit the nested cidr_blocks attribute to disallow external access (except the cluster node IPs, which GKE automatically whitelists)
-
-  ### example format ###
-  master_authorized_networks_config = [{
-    cidr_blocks = [{
-      cidr_block   = "10.0.0.0/8"
-      display_name = "example_network"
-    }],
-  }]
-
-  EOF
-
-  default = []
+  type        = list(object({cidr_blocks = list(object({cidr_block = string, display_name = string}))}))
+  description = "The desired configuration options for master authorized networks. The object format is {cidr_blocks = list(object({cidr_block = string, display_name = string}))}. Omit the nested cidr_blocks attribute to disallow external access (except the cluster node IPs, which GKE automatically whitelists)."
+  default     = []
 }
 
-{% if private_cluster %}
-variable "enable_binary_authorization" {
-  description = "Enable BinAuthZ Admission controller"
-  default     = false
-}
-
-variable "pod_security_policy_config" {
-  type = list(object({enabled:bool}))
-  description = "enabled - Enable the PodSecurityPolicy controller for this cluster. If enabled, pods must be valid under a PodSecurityPolicy to be created."
-
-  default     = [{
-    "enabled" = false
-  }]
-}
-
-{% endif %}
 variable "horizontal_pod_autoscaling" {
   type        = bool
   description = "Enable horizontal pod autoscaling addon"
@@ -243,6 +214,12 @@ variable "stub_domains" {
   default     = {}
 }
 
+variable "upstream_nameservers" {
+  type        = "list"
+  description = "If specified, the values replace the nameservers taken by default from the node’s /etc/resolv.conf"
+  default     = []
+}
+
 variable "non_masquerade_cidrs" {
   type        = list(string)
   description = "List of strings in CIDR notation that specify the IP address ranges that do not use IP masquerading."
@@ -261,6 +238,11 @@ variable "ip_masq_link_local" {
   default     = false
 }
 
+variable "configure_ip_masq" {
+  description = "Enables the installation of ip masquerading, which is usually no longer required when using aliasied IP addresses. IP masquerading uses a kubectl call, so when you have a private cluster, you will need access to the API server."
+  default     = false
+}
+
 variable "logging_service" {
   type        = string
   description = "The logging service that the cluster should write logs to. Available options include logging.googleapis.com, logging.googleapis.com/kubernetes (beta), and none"
@@ -273,11 +255,53 @@ variable "monitoring_service" {
   default     = "monitoring.googleapis.com"
 }
 
+variable "create_service_account" {
+  type        = bool
+  description = "Defines if service account specified to run nodes should be created."
+  default     = true
+}
+
+variable "grant_registry_access" {
+  type        = bool
+  description = "Grants created cluster-specific service account storage.objectViewer role."
+  default     = false
+}
+
 variable "service_account" {
   type        = string
-  description = "The service account to run nodes as if not overridden in `node_pools`. The default value will cause a cluster-specific service account to be created."
-  default     = "create"
+  description = "The service account to run nodes as if not overridden in `node_pools`. The create_service_account variable default value (true) will cause a cluster-specific service account to be created."
+  default     = ""
 }
+
+variable "basic_auth_username" {
+  type        = string
+  description = "The username to be used with Basic Authentication. An empty value will disable Basic Authentication, which is the recommended configuration."
+  default     = ""
+}
+
+variable "basic_auth_password" {
+  type        = string
+  description = "The password to be used with Basic Authentication."
+  default     = ""
+}
+
+variable "issue_client_certificate" {
+  type        = bool
+  description = "Issues a client certificate to authenticate to the cluster endpoint. To maximize the security of your cluster, leave this option disabled. Client certificates don't automatically rotate and aren't easily revocable. WARNING: changing this after cluster creation is destructive!"
+  default     = false
+}
+
+variable "cluster_ipv4_cidr" {
+  default     = ""
+  description = "The IP address range of the kubernetes pods in this cluster. Default is an automatically assigned CIDR."
+}
+
+variable "cluster_resource_labels" {
+  type        = map(string)
+  description = "The GCE resource labels (a map of key/value pairs) to be applied to the cluster"
+  default     = {}
+}
+
 {% if private_cluster %}
 
 variable "deploy_using_private_endpoint" {
@@ -304,21 +328,71 @@ variable "master_ipv4_cidr_block" {
   default     = "10.0.0.0/28"
 }
 {% endif %}
+{% if beta_cluster %}
 
-variable "basic_auth_username" {
-  type        = string
-  description = "The username to be used with Basic Authentication. An empty value will disable Basic Authentication, which is the recommended configuration."
-  default     = ""
-}
-
-variable "basic_auth_password" {
-  type        = string
-  description = "The password to be used with Basic Authentication."
-  default     = ""
-}
-
-variable "issue_client_certificate" {
-  type        = bool
-  description = "Issues a client certificate to authenticate to the cluster endpoint. To maximize the security of your cluster, leave this option disabled. Client certificates don't automatically rotate and aren't easily revocable. WARNING: changing this after cluster creation is destructive!"
+variable "istio" {
+  description = "(Beta) Enable Istio addon"
   default     = false
 }
+
+variable "default_max_pods_per_node" {
+  description = "The maximum number of pods to schedule per node"
+  default     = 110
+}
+
+variable "database_encryption" {
+  description = "Application-layer Secrets Encryption settings. The object format is {state = string, key_name = string}. Valid values of state are: \"ENCRYPTED\"; \"DECRYPTED\". key_name is the name of a CloudKMS key."
+  type        = list(object({state = string, key_name = string}))
+  default     = [{
+    state     = "DECRYPTED"
+    key_name  = ""
+  }]
+}
+
+variable "cloudrun" {
+  description = "(Beta) Enable CloudRun addon"
+  default     = false
+}
+
+variable "enable_binary_authorization" {
+  description = "Enable BinAuthZ Admission controller"
+  default     = false
+}
+
+variable "pod_security_policy_config" {
+  description = "enabled - Enable the PodSecurityPolicy controller for this cluster. If enabled, pods must be valid under a PodSecurityPolicy to be created."
+  default     = [{
+    "enabled" = false
+  }]
+}
+
+variable "node_metadata" {
+  description = "Specifies how node metadata is exposed to the workload running on the node"
+  default     = "UNSPECIFIED"
+}
+
+variable "enable_intranode_visibility" {
+  type        = bool
+  description = "Whether Intra-node visibility is enabled for this cluster. This makes same node pod to pod traffic visible for VPC network"
+  default     = false
+}
+
+ variable "enable_vertical_pod_autoscaling" {
+  type        = bool
+  description = "Vertical Pod Autoscaling automatically adjusts the resources of pods controlled by it"
+  default     = false
+}
+
+variable "identity_namespace" {
+  description = "Workload Identity namespace"
+  type        = string
+  default     = ""
+}
+
+variable "authenticator_security_group" {
+  type        = string
+  description = "The name of the RBAC security group for use with Google security groups in Kubernetes RBAC. Group name must be in format gke-security-groups@yourdomain.com"
+  default     = null
+}
+
+{% endif %}

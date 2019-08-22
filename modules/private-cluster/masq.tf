@@ -20,7 +20,7 @@
   Create ip-masq-agent confimap
  *****************************************/
 resource "kubernetes_config_map" "ip-masq-agent" {
-  count = var.network_policy ? 1 : 0
+  count = var.configure_ip_masq ? 1 : 0
 
   metadata {
     name      = "ip-masq-agent"
@@ -44,7 +44,5 @@ EOF
     data.google_client_config.default,
     google_container_cluster.primary,
     google_container_node_pool.pools,
-    google_container_cluster.zonal_primary,
-    google_container_node_pool.zonal_pools,
   ]
 }
