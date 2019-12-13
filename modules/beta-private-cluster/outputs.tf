@@ -88,6 +88,18 @@ output "ca_certificate" {
   value       = local.cluster_ca_certificate
 }
 
+output "client_certificate" {
+  sensitive   = true
+  description = "Cluster client certificate (base64 encoded)"
+  value       = local.cluster_client_certificate
+}
+
+output "client_key" {
+  sensitive   = true
+  description = "Cluster client key (base64 encoded)"
+  value       = local.cluster_client_key
+}
+
 output "network_policy_enabled" {
   description = "Whether network policy enabled"
   value       = local.cluster_network_policy_enabled
