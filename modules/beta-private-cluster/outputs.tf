@@ -100,6 +100,24 @@ output "client_key" {
   value       = local.cluster_client_key
 }
 
+output "master_auth" {
+  sensitive   = true
+  description = "Cluster client key (base64 encoded)"
+  value       = local.cluster_master_auth_map
+}
+
+output "master_auth_1" {
+  sensitive   = true
+  description = "Cluster client key (base64 encoded)"
+  value       = local.cluster_master_auth_list_layer1
+}
+
+output "master_auth_2" {
+  sensitive   = true
+  description = "Cluster client key (base64 encoded)"
+  value       = local.cluster_master_auth_list_layer2
+}
+
 output "network_policy_enabled" {
   description = "Whether network policy enabled"
   value       = local.cluster_network_policy_enabled
