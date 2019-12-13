@@ -116,6 +116,8 @@ locals {
   cluster_zones                              = sort(local.cluster_output_zones)
   cluster_endpoint                           = local.cluster_output_endpoint
   cluster_ca_certificate                     = local.cluster_master_auth_map["cluster_ca_certificate"]
+  cluster_client_certificate                 = local.cluster_master_auth_map["client_certificate"]
+  cluster_client_key                         = local.cluster_master_auth_map["client_key"]
   cluster_master_version                     = local.cluster_output_master_version
   cluster_min_master_version                 = local.cluster_output_min_master_version
   cluster_logging_service                    = local.cluster_output_logging_service
