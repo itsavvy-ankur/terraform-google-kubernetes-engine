@@ -480,3 +480,18 @@ variable "enable_shielded_nodes" {
   description = "Enable Shielded Nodes features on all nodes in this cluster"
   default     = true
 }
+
+variable "enable_network_egress_metering" {
+  type    = bool
+  default = false
+}
+
+variable "enable_resource_consumption_metering" {
+  type    = bool
+  default = false
+}
+
+variable "bigquery_dataset_id" {
+  type    = string
+  default = ""
+}
