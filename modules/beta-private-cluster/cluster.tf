@@ -237,6 +237,14 @@ resource "google_container_cluster" "primary" {
       security_group = authenticator_groups_config.value.security_group
     }
   }
+
+  resource_usage_export_config {
+    enable_network_egress_metering = var.enable_network_egress_metering
+    enable_resource_consumption_metering = var.enable_resource_consumption_metering
+    bigquery_destination {
+      dataset_id = var.bigquery_dataset_id
+    }
+  }
 }
 
 /******************************************
