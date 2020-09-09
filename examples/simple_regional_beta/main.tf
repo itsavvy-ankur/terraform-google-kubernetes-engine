@@ -19,7 +19,7 @@ locals {
 }
 
 provider "google-beta" {
-  version = "~> 3.19.0"
+  version = "~> 3.35.0"
   region  = var.region
 }
 
@@ -40,14 +40,17 @@ module "gke" {
   cloudrun                    = var.cloudrun
   dns_cache                   = var.dns_cache
   gce_pd_csi_driver           = var.gce_pd_csi_driver
-  node_metadata               = var.node_metadata
   sandbox_enabled             = var.sandbox_enabled
   remove_default_node_pool    = var.remove_default_node_pool
   node_pools                  = var.node_pools
   database_encryption         = var.database_encryption
   enable_binary_authorization = var.enable_binary_authorization
-  pod_security_policy_config  = var.pod_security_policy_config
+  enable_pod_security_policy  = var.enable_pod_security_policy
   release_channel             = "REGULAR"
+
+  # Disable workload identity
+  identity_namespace = null
+  node_metadata      = "UNSPECIFIED"
 }
 
 data "google_client_config" "default" {

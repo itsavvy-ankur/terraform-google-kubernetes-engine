@@ -55,6 +55,8 @@ control "gcloud" do
           "kubernetesDashboard" => {
             "disabled" => true,
           },
+          "kalmConfig" => {},
+          "configConnectorConfig" => {},
           "networkPolicyConfig" => {},
           "istioConfig" => {"auth"=>"AUTH_MUTUAL_TLS"},
           "cloudRunConfig" => {},
@@ -70,12 +72,6 @@ control "gcloud" do
       it "has the expected binaryAuthorization config" do
         expect(data['binaryAuthorization']).to eq({
           "enabled" => true,
-        })
-      end
-
-      it "has the expected nodeMetadata conseal config" do
-        expect(data['nodeConfig']['workloadMetadataConfig']).to include({
-          "nodeMetadata" => 'EXPOSE',
         })
       end
 
@@ -152,7 +148,7 @@ control "gcloud" do
         expect(node_pools).to include(
           including(
             "config" => including(
-              "machineType" => "n1-standard-2",
+              "machineType" => "e2-medium",
             ),
           )
         )

@@ -54,7 +54,7 @@ output "endpoint" {
     */
     google_container_cluster.primary,
     google_container_node_pool.pools,
-    null_resource.wait_for_cluster.id,
+    module.gcloud_wait_for_cluster.wait,
   ]
 }
 
@@ -166,7 +166,7 @@ output "release_channel" {
 
 output "identity_namespace" {
   description = "Workload Identity namespace"
-  value       = var.identity_namespace
+  value       = length(local.cluster_workload_identity_config) > 0 ? local.cluster_workload_identity_config[0].identity_namespace : null
   depends_on = [
     google_container_cluster.primary
   ]

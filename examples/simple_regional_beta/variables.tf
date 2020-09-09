@@ -69,12 +69,6 @@ variable "gce_pd_csi_driver" {
   default     = false
 }
 
-variable "node_metadata" {
-  description = "Specifies how node metadata is exposed to the workload running on the node"
-  default     = "SECURE"
-  type        = string
-}
-
 variable "sandbox_enabled" {
   type        = bool
   description = "(Beta) Enable GKE Sandbox (Do not forget to set `image_type` = `COS_CONTAINERD` and `node_version` = `1.12.7-gke.17` or later to use it)."
@@ -112,11 +106,10 @@ variable "enable_binary_authorization" {
   default     = false
 }
 
-variable "pod_security_policy_config" {
+variable "enable_pod_security_policy" {
+  type        = bool
   description = "enabled - Enable the PodSecurityPolicy controller for this cluster. If enabled, pods must be valid under a PodSecurityPolicy to be created."
-  default = [{
-    "enabled" = false
-  }]
+  default     = false
 }
 
 variable "zones" {
