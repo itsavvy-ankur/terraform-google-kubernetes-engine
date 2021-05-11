@@ -29,15 +29,15 @@ variable "project_id" {
   type        = string
 }
 
+variable "hub_project_id" {
+  description = "The project in which the GKE Hub belongs."
+  type        = string
+  default     = ""
+}
+
 variable "location" {
   description = "The location (zone or region) this cluster has been created in."
   type        = string
-}
-
-variable "skip_gcloud_download" {
-  description = "Whether to skip downloading gcloud (assumes gcloud and kubectl already available outside the module)"
-  type        = bool
-  default     = true
 }
 
 variable "use_tf_google_credentials_env_var" {
@@ -65,7 +65,36 @@ variable "gke_hub_sa_name" {
 }
 
 variable "gke_hub_membership_name" {
-  description = "Memebership name that uniquely represents the cluster being registered on the Hub"
+  description = "Membership name that uniquely represents the cluster being registered on the Hub"
   type        = string
   default     = "gke-hub-membership"
+}
+
+variable "use_existing_sa" {
+  description = "Uses an existing service account to register membership. Requires sa_private_key"
+  type        = bool
+  default     = false
+}
+
+variable "sa_private_key" {
+  description = "Private key for service account base64 encoded. Required only if `use_existing_sa` is set to `true`."
+  type        = string
+  default     = null
+}
+
+variable "module_depends_on" {
+  description = "List of modules or resources this module depends on."
+  type        = list
+  default     = []
+}
+
+variable "use_kubeconfig" {
+  description = "Use existing kubeconfig to register membership. Set this to true for non GKE clusters. Assumes kubectl context is set to cluster to register."
+  default     = false
+}
+
+variable "labels" {
+  description = "Comma separated labels in the format name=value to apply to cluster in the GCP Console."
+  type        = string
+  default     = ""
 }

@@ -14,35 +14,27 @@
  * limitations under the License.
  */
 
-module "asm_install" {
-  source            = "terraform-google-modules/gcloud/google//modules/kubectl-wrapper"
-  version           = "~> 1.4"
-  module_depends_on = [var.cluster_endpoint]
-
-  gcloud_sdk_version    = var.gcloud_sdk_version
-  skip_download         = var.skip_gcloud_download
-  upgrade               = true
-  additional_components = ["kubectl", "kpt", "beta", "kustomize"]
-  cluster_name          = var.cluster_name
-  cluster_location      = var.location
-  project_id            = var.project_id
-
-
-  kubectl_create_command  = "${path.module}/scripts/install_asm.sh ${var.project_id} ${var.cluster_name} ${var.location} ${var.asm_dir} ${var.asm_version}"
-  kubectl_destroy_command = "kubectl delete ns istio-system"
+data "google_project" "asm_project" {
+  project_id = var.project_id
 }
 
-module "gke_hub_registration" {
-  source = "../hub"
+locals {
+  kubectl_create_command_base = "${path.module}/scripts/install_asm.sh ${var.project_id} ${var.cluster_name} ${var.location} ${var.asm_version}"
+}
 
-  project_id                  = var.project_id
-  cluster_name                = var.cluster_name
-  cluster_endpoint            = var.cluster_endpoint
-  location                    = var.location
-  skip_gcloud_download        = var.skip_gcloud_download
-  gcloud_sdk_version          = var.gcloud_sdk_version
-  enable_gke_hub_registration = var.enable_gke_hub_registration
-  gke_hub_sa_name             = var.gke_hub_sa_name
-  gke_hub_membership_name     = var.gke_hub_membership_name
+module "asm_install" {
+  source            = "terraform-google-modules/gcloud/google//modules/kubectl-wrapper"
+  version           = "~> 2.0.2"
+  module_depends_on = [var.cluster_endpoint]
 
+  gcloud_sdk_version       = var.gcloud_sdk_version
+  upgrade                  = true
+  additional_components    = ["kubectl", "kpt", "beta", "kustomize"]
+  cluster_name             = var.cluster_name
+  cluster_location         = var.location
+  project_id               = var.project_id
+  service_account_key_file = var.service_account_key_file
+
+  kubectl_create_command  = var.managed ? "${local.kubectl_create_command_base} ${var.managed}" : local.kubectl_create_command_base
+  kubectl_destroy_command = "kubectl delete ns istio-system"
 }

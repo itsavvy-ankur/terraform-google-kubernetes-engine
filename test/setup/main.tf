@@ -20,14 +20,13 @@ resource "random_id" "random_project_id_suffix" {
 
 module "gke-project-1" {
   source  = "terraform-google-modules/project-factory/google"
-  version = "~> 8.0"
+  version = "~> 10.1"
 
-  name                 = "ci-gke-${random_id.random_project_id_suffix.hex}"
-  random_project_id    = true
-  org_id               = var.org_id
-  folder_id            = var.folder_id
-  billing_account      = var.billing_account
-  skip_gcloud_download = true
+  name              = "ci-gke-${random_id.random_project_id_suffix.hex}"
+  random_project_id = true
+  org_id            = var.org_id
+  folder_id         = var.folder_id
+  billing_account   = var.billing_account
 
   auto_create_network = true
 
@@ -39,18 +38,23 @@ module "gke-project-1" {
     "serviceusage.googleapis.com",
     "storage-api.googleapis.com",
   ]
+  activate_api_identities = [
+    {
+      api   = "container.googleapis.com"
+      roles = ["roles/cloudkms.cryptoKeyEncrypterDecrypter", "roles/container.serviceAgent"]
+    },
+  ]
 }
 
 module "gke-project-2" {
   source  = "terraform-google-modules/project-factory/google"
-  version = "~> 8.0"
+  version = "~> 10.1"
 
-  name                 = "ci-gke-${random_id.random_project_id_suffix.hex}"
-  random_project_id    = true
-  org_id               = var.org_id
-  folder_id            = var.folder_id
-  billing_account      = var.billing_account
-  skip_gcloud_download = true
+  name              = "ci-gke-${random_id.random_project_id_suffix.hex}"
+  random_project_id = true
+  org_id            = var.org_id
+  folder_id         = var.folder_id
+  billing_account   = var.billing_account
 
   activate_apis = [
     "cloudkms.googleapis.com",
@@ -59,20 +63,26 @@ module "gke-project-2" {
     "pubsub.googleapis.com",
     "serviceusage.googleapis.com",
     "storage-api.googleapis.com",
+    "gkehub.googleapis.com",
+  ]
+  activate_api_identities = [
+    {
+      api   = "container.googleapis.com"
+      roles = ["roles/cloudkms.cryptoKeyEncrypterDecrypter", "roles/container.serviceAgent"]
+    },
   ]
 }
 
-# apis as documented https://cloud.google.com/service-mesh/docs/gke-install-new-cluster#setting_up_your_project
+# apis as documented https://cloud.google.com/service-mesh/docs/scripted-install/reference#setting_up_your_project
 module "gke-project-asm" {
   source  = "terraform-google-modules/project-factory/google"
-  version = "~> 8.0"
+  version = "~> 10.1"
 
-  name                 = "ci-gke-asm-${random_id.random_project_id_suffix.hex}"
-  random_project_id    = true
-  org_id               = var.org_id
-  folder_id            = var.folder_id
-  billing_account      = var.billing_account
-  skip_gcloud_download = true
+  name              = "ci-gke-asm-${random_id.random_project_id_suffix.hex}"
+  random_project_id = true
+  org_id            = var.org_id
+  folder_id         = var.folder_id
+  billing_account   = var.billing_account
 
   activate_apis = [
     "logging.googleapis.com",
@@ -81,5 +91,13 @@ module "gke-project-asm" {
     "meshconfig.googleapis.com",
     "anthos.googleapis.com",
     "cloudresourcemanager.googleapis.com",
+    "monitoring.googleapis.com",
+    "stackdriver.googleapis.com",
+    "cloudtrace.googleapis.com",
+    "meshca.googleapis.com",
+    "iamcredentials.googleapis.com",
+    "gkeconnect.googleapis.com",
+    "privateca.googleapis.com",
+    "gkehub.googleapis.com",
   ]
 }

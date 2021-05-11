@@ -19,20 +19,21 @@ locals {
 }
 
 provider "google" {
-  version = "~> 3.35.0"
+  version = "~> 3.42.0"
   region  = var.region
 }
 
+data "google_client_config" "default" {}
+
 provider "kubernetes" {
-  version                = "~> 1.10, != 1.11.0"
-  host                   = module.gke.endpoint
+  load_config_file       = false
+  host                   = "https://${module.gke.endpoint}"
   token                  = data.google_client_config.default.access_token
   cluster_ca_certificate = base64decode(module.gke.ca_certificate)
-  load_config_file       = false
 }
 
 module "gke" {
-  source                   = "../../modules/beta-public-cluster/"
+  source                   = "../../"
   project_id               = var.project_id
   name                     = "${local.cluster_type}-cluster${var.cluster_name_suffix}"
   region                   = var.region
@@ -82,7 +83,4 @@ module "workload_identity_existing_ksa" {
   namespace           = "default"
   use_existing_k8s_sa = true
   k8s_sa_name         = kubernetes_service_account.test.metadata.0.name
-}
-
-data "google_client_config" "default" {
 }

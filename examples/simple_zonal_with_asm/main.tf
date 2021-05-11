@@ -19,8 +19,22 @@ locals {
 }
 
 provider "google-beta" {
-  version = "~> 3.35.0"
+  version = "~> 3.49.0"
   region  = var.region
+}
+
+provider "google" {
+  version = "~> 3.42.0"
+  region  = var.region
+}
+
+data "google_client_config" "default" {}
+
+provider "kubernetes" {
+  load_config_file       = false
+  host                   = "https://${module.gke.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(module.gke.ca_certificate)
 }
 
 data "google_project" "project" {
@@ -28,7 +42,7 @@ data "google_project" "project" {
 }
 
 module "gke" {
-  source                  = "../../modules/beta-public-cluster/"
+  source                  = "../../"
   project_id              = var.project_id
   name                    = "${local.cluster_type}-cluster${var.cluster_name_suffix}"
   regional                = false
@@ -59,7 +73,4 @@ module "asm" {
   cluster_endpoint = module.gke.endpoint
   project_id       = var.project_id
   location         = module.gke.location
-}
-
-data "google_client_config" "default" {
 }

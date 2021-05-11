@@ -15,12 +15,21 @@
  */
 
 provider "google" {
-  version = "~> 3.35.0"
+  version = "~> 3.45.0"
+}
+
+data "google_client_config" "default" {}
+
+provider "kubernetes" {
+  load_config_file       = false
+  host                   = "https://${module.gke.endpoint}"
+  token                  = data.google_client_config.default.access_token
+  cluster_ca_certificate = base64decode(module.gke.ca_certificate)
 }
 
 module "gcp-network" {
   source       = "terraform-google-modules/network/google"
-  version      = "~> 2.0"
+  version      = "~> 3.1"
   project_id   = var.project_id
   network_name = var.network
 
@@ -57,7 +66,4 @@ module "gke" {
   ip_range_pods          = var.ip_range_pods_name
   ip_range_services      = var.ip_range_services_name
   create_service_account = true
-}
-
-data "google_client_config" "default" {
 }

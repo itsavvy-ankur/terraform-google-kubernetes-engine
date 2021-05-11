@@ -49,18 +49,32 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  subnetwork = "projects/${local.network_project_id}/regions/${var.region}/subnetworks/${var.subnetwork}"
+  subnetwork = "projects/${local.network_project_id}/regions/${local.region}/subnetworks/${var.subnetwork}"
 
   default_snat_status {
     disabled = var.disable_default_snat
   }
   min_master_version = var.release_channel != null ? null : local.master_version
 
-  logging_service    = var.logging_service
-  monitoring_service = var.monitoring_service
+  dynamic "cluster_telemetry" {
+    for_each = local.cluster_telemetry_type_is_set ? [1] : []
+    content {
+      type = var.cluster_telemetry_type
+    }
+  }
+  logging_service    = local.cluster_telemetry_type_is_set ? null : var.logging_service
+  monitoring_service = local.cluster_telemetry_type_is_set ? null : var.monitoring_service
 
   cluster_autoscaling {
-    enabled             = var.cluster_autoscaling.enabled
+    enabled = var.cluster_autoscaling.enabled
+    dynamic "auto_provisioning_defaults" {
+      for_each = var.cluster_autoscaling.enabled ? [1] : []
+
+      content {
+        service_account = local.service_account
+        oauth_scopes    = local.node_pools_oauth_scopes["all"]
+      }
+    }
     autoscaling_profile = var.cluster_autoscaling.autoscaling_profile != null ? var.cluster_autoscaling.autoscaling_profile : "BALANCED"
     dynamic "resource_limits" {
       for_each = local.autoscalling_resource_limits
@@ -72,16 +86,17 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  default_max_pods_per_node = var.default_max_pods_per_node
-
-  enable_binary_authorization = var.enable_binary_authorization
-  enable_intranode_visibility = var.enable_intranode_visibility
-  enable_shielded_nodes       = var.enable_shielded_nodes
-  enable_kubernetes_alpha     = var.enable_kubernetes_alpha
-
   vertical_pod_autoscaling {
     enabled = var.enable_vertical_pod_autoscaling
   }
+
+  default_max_pods_per_node = var.default_max_pods_per_node
+
+  enable_shielded_nodes       = var.enable_shielded_nodes
+  enable_binary_authorization = var.enable_binary_authorization
+  enable_intranode_visibility = var.enable_intranode_visibility
+  enable_kubernetes_alpha     = var.enable_kubernetes_alpha
+  enable_tpu                  = var.enable_tpu
 
   dynamic "pod_security_policy_config" {
     for_each = var.enable_pod_security_policy ? [var.enable_pod_security_policy] : []
@@ -157,6 +172,7 @@ resource "google_container_cluster" "primary" {
       enabled = var.config_connector
     }
   }
+  datapath_provider = var.datapath_provider
 
   networking_mode = "VPC_NATIVE"
   ip_allocation_policy {
@@ -180,6 +196,16 @@ resource "google_container_cluster" "primary" {
         start_time = var.maintenance_start_time
       }
     }
+
+    dynamic "maintenance_exclusion" {
+      for_each = var.maintenance_exclusions
+      content {
+        exclusion_name = maintenance_exclusion.value.name
+        start_time     = maintenance_exclusion.value.start_time
+        end_time       = maintenance_exclusion.value.end_time
+      }
+    }
+
   }
 
   lifecycle {
@@ -251,6 +277,13 @@ resource "google_container_cluster" "primary" {
       security_group = authenticator_groups_config.value.security_group
     }
   }
+
+  notification_config {
+    pubsub {
+      enabled = var.notification_config_topic != "" ? true : false
+      topic   = var.notification_config_topic
+    }
+  }
 }
 
 /******************************************
@@ -289,6 +322,18 @@ resource "random_id" "name" {
             values(local.node_pools_labels["all"]),
             keys(local.node_pools_labels[each.value["name"]]),
             values(local.node_pools_labels[each.value["name"]])
+          )
+        )
+      )
+    },
+    {
+      taints = join(",",
+        sort(
+          flatten(
+            concat(
+              [for all_taints in local.node_pools_taints["all"] : "all/${all_taints.key}/${all_taints.value}/${all_taints.effect}"],
+              [for each_pool_taint in local.node_pools_taints[each.value["name"]] : "${each.value["name"]}/${each_pool_taint.key}/${each_pool_taint.value}/${each_pool_taint.effect}"],
+            )
           )
         )
       )
@@ -374,7 +419,7 @@ resource "google_container_node_pool" "pools" {
   }
 
   node_config {
-    image_type   = lookup(each.value, "image_type", "COS")
+    image_type   = lookup(each.value, "image_type", var.sandbox_enabled ? "COS_CONTAINERD" : "COS")
     machine_type = lookup(each.value, "machine_type", "e2-medium")
     labels = merge(
       lookup(lookup(local.node_pools_labels, "default_values", {}), "cluster_name", true) ? { "cluster_name" = var.name } : {},
@@ -442,7 +487,6 @@ resource "google_container_node_pool" "pools" {
         node_metadata = lookup(each.value, "node_metadata", workload_metadata_config.value.node_metadata)
       }
     }
-
     dynamic "sandbox_config" {
       for_each = local.cluster_sandbox_enabled
 
@@ -452,6 +496,28 @@ resource "google_container_node_pool" "pools" {
     }
 
     boot_disk_kms_key = lookup(each.value, "boot_disk_kms_key", "")
+
+    dynamic "kubelet_config" {
+      for_each = contains(keys(each.value), "cpu_manager_policy") ? [1] : []
+
+      content {
+        cpu_manager_policy = lookup(each.value, "cpu_manager_policy")
+      }
+    }
+
+    dynamic "linux_node_config" {
+      for_each = length(merge(
+        local.node_pools_linux_node_configs_sysctls["all"],
+        local.node_pools_linux_node_configs_sysctls[each.value["name"]]
+      )) != 0 ? [1] : []
+
+      content {
+        sysctls = merge(
+          local.node_pools_linux_node_configs_sysctls["all"],
+          local.node_pools_linux_node_configs_sysctls[each.value["name"]]
+        )
+      }
+    }
 
     shielded_instance_config {
       enable_secure_boot          = lookup(each.value, "enable_secure_boot", false)
@@ -472,21 +538,3 @@ resource "google_container_node_pool" "pools" {
   }
 }
 
-module "gcloud_wait_for_cluster" {
-  source  = "terraform-google-modules/gcloud/google"
-  version = "~> 1.3.0"
-  enabled = var.skip_provisioners
-
-  upgrade       = var.gcloud_upgrade
-  skip_download = var.gcloud_skip_download
-
-  create_cmd_entrypoint  = "${path.module}/scripts/wait-for-cluster.sh"
-  create_cmd_body        = "${var.project_id} ${var.name}"
-  destroy_cmd_entrypoint = "${path.module}/scripts/wait-for-cluster.sh"
-  destroy_cmd_body       = "${var.project_id} ${var.name}"
-
-  module_depends_on = concat(
-    [google_container_cluster.primary.master_version],
-    [for pool in google_container_node_pool.pools : pool.name]
-  )
-}
