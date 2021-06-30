@@ -364,6 +364,12 @@ resource "google_container_node_pool" "pools" {
       local.node_pools_labels["all"],
       local.node_pools_labels[each.value["name"]],
     )
+    resource_labels = merge(
+      lookup(lookup(local.node_pools_gcp_labels, "default_values", {}), "cluster_name", true) ? { "cluster_name" = var.name } : {},
+      lookup(lookup(local.node_pools_gcp_labels, "default_values", {}), "node_pool", true) ? { "node_pool" = each.value["name"] } : {},
+      local.node_pools_gcp_labels["all"],
+      local.node_pools_gcp_labels[each.value["name"]],
+    )
     metadata = merge(
       lookup(lookup(local.node_pools_metadata, "default_values", {}), "cluster_name", true) ? { "cluster_name" = var.name } : {},
       lookup(lookup(local.node_pools_metadata, "default_values", {}), "node_pool", true) ? { "node_pool" = each.value["name"] } : {},

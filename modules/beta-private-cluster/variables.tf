@@ -187,6 +187,17 @@ variable "node_pools_labels" {
   }
 }
 
+variable "node_pools_gcp_labels" {
+  type        = map(map(string))
+  description = "Map of maps containing node labels by node-pool name"
+
+  # Default is being set in variables_defaults.tf
+  default = {
+    all               = {}
+    default-node-pool = {}
+  }
+}
+
 variable "node_pools_metadata" {
   type        = map(map(string))
   description = "Map of maps containing node metadata by node-pool name"
