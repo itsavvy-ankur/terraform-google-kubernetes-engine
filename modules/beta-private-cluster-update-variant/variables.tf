@@ -109,7 +109,7 @@ variable "network_policy_provider" {
 }
 variable "datapath_provider" {
   type        = string
-  description = "The desired datapath provider for this cluster. By default, uses the IPTables-based kube-proxy implementation."
+  description = "The desired datapath provider for this cluster. By default, `DATAPATH_PROVIDER_UNSPECIFIED` enables the IPTables-based kube-proxy implementation. `ADVANCED_DATAPATH` enables Dataplane-V2 feature."
   default     = "DATAPATH_PROVIDER_UNSPECIFIED"
 }
 
@@ -483,6 +483,12 @@ variable "cloudrun_load_balancer_type" {
 variable "enable_pod_security_policy" {
   type        = bool
   description = "enabled - Enable the PodSecurityPolicy controller for this cluster. If enabled, pods must be valid under a PodSecurityPolicy to be created."
+  default     = false
+}
+
+variable "enable_l4_ilb_subsetting" {
+  type        = bool
+  description = "Enable L4 ILB Subsetting on the cluster"
   default     = false
 }
 

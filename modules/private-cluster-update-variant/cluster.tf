@@ -59,7 +59,7 @@ resource "google_container_cluster" "primary" {
   cluster_autoscaling {
     enabled = var.cluster_autoscaling.enabled
     dynamic "resource_limits" {
-      for_each = local.autoscalling_resource_limits
+      for_each = local.autoscaling_resource_limits
       content {
         resource_type = lookup(resource_limits.value, "resource_type")
         minimum       = lookup(resource_limits.value, "minimum")
@@ -368,6 +368,7 @@ resource "google_container_node_pool" "pools" {
     local_ssd_count = lookup(each.value, "local_ssd_count", 0)
     disk_size_gb    = lookup(each.value, "disk_size_gb", 100)
     disk_type       = lookup(each.value, "disk_type", "pd-standard")
+
 
     service_account = lookup(
       each.value,

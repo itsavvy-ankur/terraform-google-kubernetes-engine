@@ -19,19 +19,18 @@ locals {
 }
 
 provider "google-beta" {
-  version = "~> 3.49.0"
+  version = "~> 3.63.0"
   region  = var.region
 }
 
 provider "google" {
-  version = "~> 3.42.0"
+  version = "~> 3.63.0"
   region  = var.region
 }
 
 data "google_client_config" "default" {}
 
 provider "kubernetes" {
-  load_config_file       = false
   host                   = "https://${module.gke.endpoint}"
   token                  = data.google_client_config.default.access_token
   cluster_ca_certificate = base64decode(module.gke.ca_certificate)
@@ -68,9 +67,15 @@ module "gke" {
 }
 
 module "asm" {
-  source           = "../../modules/asm"
-  cluster_name     = module.gke.name
-  cluster_endpoint = module.gke.endpoint
-  project_id       = var.project_id
-  location         = module.gke.location
+  source                = "../../modules/asm"
+  cluster_name          = module.gke.name
+  cluster_endpoint      = module.gke.endpoint
+  project_id            = var.project_id
+  location              = module.gke.location
+  enable_cluster_roles  = true
+  enable_cluster_labels = true
+  enable_gcp_apis       = true
+  enable_gcp_components = true
+  options               = ["envoy-access-log"]
+  outdir                = "./${module.gke.name}-outdir"
 }
